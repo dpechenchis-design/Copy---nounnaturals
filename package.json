@@ -1,0 +1,32 @@
+{
+  "name": "noun-art",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./src/lib/import/ts-resolve.mjs --import ./src/lib/content/test-hooks.mjs --test src/lib/import/notion/*.test.mjs src/lib/import/*.test.mjs src/lib/auth/*.test.mjs src/components/paint/*.test.mjs src/components/calendar/*.test.mjs src/lib/paint/*.test.mjs src/lib/refunnel/*.test.mjs src/lib/access/*.test.mjs src/lib/calendar/*.test.mjs src/lib/integrations/*.test.mjs src/lib/google/*.test.mjs src/lib/setup/*.test.mjs src/lib/content/*.test.mjs src/lib/social/*.test.mjs src/lib/social/*/*.test.mjs src/lib/higgsfield/*.test.mjs src/lib/r2/*.test.mjs src/lib/frameio/*.test.mjs src/lib/drive/*.test.mjs src/lib/ai/reader/*.test.mjs src/lib/cloud/*.test.mjs src/lib/presence/*.test.mjs",
+    "test:db": "node --test supabase/tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.118.0",
+    "aws4fetch": "1.0.20",
+    "next": "16.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "read-excel-file": "9.3.14"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.14",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,111 @@
+# Mobile pass: Noun ART, concept 6 "Iris on Tan"
+
+Done on the approved prototype (`design/concepts/concept-6.html`) at 390 and 360 wide, light for all 25 screens, plus dark for home, review, upload, bank schedule sheet and editor task. Measured in the browser (getBoundingClientRect, computed styles), not guessed. No code was changed. The class names below exist in `src/design/core.css` and `src/design/screens.css` unless a file is named.
+
+## Summary
+
+The design is in good shape for a phone. Every button, chip, tab, toggle and icon button measured at least 44 by 44 px, except one group (the account chips in the schedule sheet). No screen scrolls sideways at 390. The bottom bar, sheets and the floating Upload button all respect the safe area at the bottom. The schedule sheet keeps its Schedule button reachable (sticky, bottom edge at 828 of 844).
+
+What needs work:
+
+- The two most important actions in the app, Approve and Send to editor, and the editor's Upload button, sit in the middle of long pages and are not sticky. On a phone they are one to two screens below the video.
+- Every text input is 15.5px, so iPhone Safari will zoom the page when anyone taps a field.
+- The Carousel screen scrolls sideways on a 360 wide phone (19px).
+- Some small text is under 12px and a few greys are just under the contrast line.
+- The camera roll tile on Upload is a placeholder in the prototype. The real build must make it a true file picker (see finding 6).
+
+Counts: Must fix 6, Should fix 8, Nice 6. Total 20.
+
+## Findings
+
+### Must fix
+
+| # | Screen | What is wrong (measured) | Class | Fix |
+|---|---|---|---|---|
+| 1 | Review (swipe, light and dark) | Approve and Send to editor are static, at y 1199 of a 2767 px page. On an 844 px screen the owner scrolls about 1.4 screens past the video, the notes and the "Goes to Olena" card to reach them. Both buttons are 58 px tall, which is good. | `.rv-actions` (the Send/Approve row, `.btn.primary.lg.send` and `.btn.ok.lg`) | Make the row sticky above the bottom bar by adding the existing `sticky-cta` class to that row in markup, or in `screens.css`: `@media(max-width:1023px){.rv-actions.stick{position:sticky;bottom:calc(var(--nav-h) + 46px + env(safe-area-inset-bottom));z-index:5;margin-top:var(--sp-4);padding:var(--sp-2);border-radius:var(--r-btn);background:var(--pop-bg);backdrop-filter:blur(var(--blur));-webkit-backdrop-filter:blur(var(--blur));box-shadow:var(--sh-float);border:1px solid var(--glass-brd)}}`. The 46 offset clears the raised Upload circle (it sticks out 36 px above the bar). Keep the "Nothing is sent until you press Send" line directly under the video notes, not under the sticky bar. |
+| 2 | Editor task (`edtask` t1, t2, t3) | "Upload v3" is at y 1383 of 1675 and "Upload v1" at y 1523 of 1891, static. This is the editor's one main job, and they must scroll to the bottom of the notes to find it. | `.btn.primary.block.lg` inside the edtask view | Wrap it in `<div class="sticky-cta">` (same as the Upload and Studio screens already do). The `.nav-center .sticky-cta{bottom:calc(var(--nav-h) + 46px + env(safe-area-inset-bottom))}` rule then clears the Upload circle. |
+| 3 | Every screen with a field: Settings invite email, Review note box and reply, Studio prompt, Sounds prompt, Rules, Bank captions, link paste, all search boxes in dropdowns | Computed font size is 15.5px (`--fs-md`). iPhone Safari zooms the whole page on focus for anything under 16px, and does not zoom back. | `.field input`, `.search input`, `.prompt`, `.askbox textarea`, `.composer .prompt`, `.dd-q input`, `.chatbar input`, plain `input`, `textarea`, `select` | In `core.css`: `input,textarea,select{font-size:16px}` and keep it above the component rules. Then drop the per component sizes (`.askbox.big textarea{font-size:var(--fs-lg)}` is fine, it is larger). Do not use `maximum-scale=1`, it blocks accessibility zoom. Also in the `@media(min-width:1024px)` block `.field input{font-size:var(--fs-sm)}` is fine for desktop only, keep it inside that query. |
+| 4 | Carousel (360 wide) | Page scrolls sideways: scrollWidth 379 vs 360. Cause: `.agentbar` is a grid with no column template, so its single auto column grows to fit the long suggestion chips (`white-space:nowrap`). The chips row, the ask box and the Send button then run 19 px past the edge (`div.chips` right edge 379, `button.btn.primary` 371). At 390 it fits only by luck. | `.agentbar`, `.agentbar .chip` | In `screens.css`: `.agentbar{grid-template-columns:minmax(0,1fr)}` and `.agentbar .chip{white-space:normal;text-align:left;height:auto;padding-block:10px;line-height:1.25}`. Check the same pattern on any other grid that holds `.chip` rows (`.chips` inside a `display:grid` parent). |
+| 5 | Bank, schedule sheet (`#bank.light.form`, light and dark) | The account choosers are 40 px tall: `button.acct` 134 to 160 x 40 (six of them). Below the 44 px minimum, and this is the screen where people pick which of many accounts a video posts to, so mis taps matter. | `.acct` | In `screens.css`: `.acct{min-height:44px;padding:2px 2px}` and make the inner pill stretch (`.acct>*{min-height:40px}`), or simply `.acct{padding:4px 4px}` so the outer box is 44 while the look stays the same. Keep the 18 px `.ckb` tick as is. |
+| 6 | Upload (phone) | The "Camera roll" and "Record now" tiles are placeholder buttons (`data-act="noop"`). The real "Select videos" label is hidden on mobile (0 x 0). So today the path is Upload, then a tile that does nothing. The path itself is right (2 taps: Upload in the bar, then Camera roll) but only if the tile is a real picker. | `Camera roll` tile (173 x 124), `Record now` tile | Build rule, not CSS: the Camera roll tile must be a `<label>` that wraps `<input type="file" accept="video/*" multiple>` (visually hidden, not `display:none`), so one tap opens the iOS and Android library picker. `Record now` is a second label with `<input type="file" accept="video/*" capture="environment">`. Both labels use the existing tile class and stay 124 px tall. Do not trigger the input from a `button` after an await, iOS blocks that. No extra confirm screen between the pick and the upload start: pick, then show the destination day and card inbox with a single "Upload 3 videos" sticky button (already in the design). |
+
+### Should fix
+
+| # | Screen | What is wrong (measured) | Class | Fix |
+|---|---|---|---|---|
+| 7 | Home, Review, Upload (light) | The grey `--ink-3` text measures 4.21:1 on the tan canvas at 12px ("0:09", "2 notes on this version", "Nothing is sent until you press Send", "Where", "Upload", "Done" labels). Under 4.5:1 for small text. Dark mode passes. | `--ink-3` in `tokens.css` (light block) | Change `--ink-3:#7A7363` to `--ink-3:#6E6757` (about 5.0:1 on #F6F2E9, 5.5:1 on white). |
+| 8 | Home, Bank (light) | `.tag.ai` "AI" pill measures 4.22:1 at 12px. | `.tag.ai` | Darken its text or background one step, for example use `var(--on-solid)` on `--st-editing` darkened by 8 percent (`color-mix(in srgb,var(--st-editing) 92%,#000)`). Target 4.5:1 or better. |
+| 9 | Upload, Studio, Raw, Brand | Photo captions on thumbnails are 10px (`0:48 · 1.4 GB`, `Saved face`, `0:44`), and white on the lighter gradient areas measures from 1.97 to 4.2:1. Real video frames will be brighter still. All of these come from one rule. | `.thumb` (`font-size:10px`), `.thumb.mini` | `.thumb{font-size:12px;text-shadow:0 1px 3px rgba(0,0,0,.75)}`. In the real component also draw a bottom scrim behind captions: a `linear-gradient(transparent, rgba(0,0,0,.6))` layer that sits under the text (as a background on the caption bar, not a positioned pseudo element above it). |
+| 10 | All screens | Text under 12px: bottom bar labels 11px (`.nav-i`), badge 10px (`.nav-i .badge`), and 11px or 10px in `.slotc b/small`, `.month-g small`, `.tg-t`, `.ath`, `.tool`, `.pn`, `.fcount`, `.ncap` (10px), `.sw div` (10px). Ukraine editors read these on small screens. | those classes | Set a floor: `--fs-2xs:12px` in `tokens.css` and use it everywhere text is shown. Bottom bar: `.nav-i{font-size:12px}` (five items of 71 px still fit "Review" and "Studio"). `.nav-i .badge{font-size:11px;min-width:20px;height:20px;line-height:20px}`. Numbers inside a 22 px dot (`.pn`) may stay 11px since they are decoration, everything else 12px. |
+| 11 | Bank (390 and 360), schedule sheet | "Approved by Khaled · Nov 13, 4:10 pm" is cut off. The text needs 224 px and gets 119 px, so only "Approved by Kha..." shows. Our rule is that approved videos always show who approved them. | `small.mut.clip` | `small.mut.clip{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}` so it wraps to two lines. Same fix wherever a name or date sits in a `.clip` line. |
+| 12 | Analytics, Sounds, Settings | The tab strip scrolls sideways and hides its scrollbar. Sounds has 5 tabs 757 px wide (Settings 610, Analytics 789) on a 390 screen, so tabs 3 to 5 are off screen with no hint. This is an intended inner scroller (fine), but it needs a visible edge and the active tab must be in view. | `.tabsbar`, `.xscroll` | `screens.css`: `.tabsbar{scroll-snap-type:x proximity;mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}` and `.tabsbar>*{scroll-snap-align:start}`. In script, call `activeTab.scrollIntoView({inline:'center',block:'nearest'})` on every tab change and on load. Remove the mask when scrolled to the end. |
+| 13 | All screens, installed as a web app | No safe area at the top or sides. `.top` (64px sticky header), `#view`, `.nav` and `.toast` ignore `env(safe-area-inset-top/left/right)`. With `viewport-fit=cover` the header slides under the notch or status bar in the installed app, and under the notch in landscape. Bottom is handled correctly everywhere (`.nav`, `.sheet`, `.fab`, `.upchip`, `.sticky-cta`, `.schfoot`, `.selbar`). | `.top`, `#view`, `.nav`, `.toast` | `core.css`: `.top{height:calc(var(--top-h) + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(var(--sp-4),env(safe-area-inset-right)) 0 max(var(--sp-4),env(safe-area-inset-left))}` `#view{padding-left:max(var(--sp-4),env(safe-area-inset-left));padding-right:max(var(--sp-4),env(safe-area-inset-right))}` `.nav{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}` `.toast{top:calc(var(--top-h) + env(safe-area-inset-top) + 10px)}`. In `layout.tsx` also add `appleWebApp: {capable:true, title:'Noun ART', statusBarStyle:'default'}` so iOS runs it full screen. |
+| 14 | Forms, all | Wrong keyboards. Invite email field has no `type` (`#invEmail`), the paste a TikTok or Instagram link field has no `type=url`, search boxes are plain text, the comment boxes do not say Send on the keyboard. iOS then capitalizes and autocorrects emails and links. | `input` elements in markup | Email: `type="email" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off"`. Link: `type="url" inputmode="url" autocapitalize="none" autocorrect="off"`. Search boxes: `type="search" enterkeyhint="search"`. Comment and reply: `enterkeyhint="send"`. Account handle: `autocapitalize="none" autocorrect="off" spellcheck="false"`. Captions and notes keep normal text and spellcheck (editors write in Ukrainian and English: set `lang` per field if known). |
+
+### Nice
+
+| # | Screen | What is wrong (measured) | Class | Fix |
+|---|---|---|---|---|
+| 15 | Sheets (More menu, schedule sheet) | Sheets scroll but do not stop the page behind them from scrolling (no `overscroll-behavior`), so a flick at the end of the sheet moves the page. | `.sheet`, `.scrim` | `.sheet{overscroll-behavior:contain}` and set `document.body.style.overflow='hidden'` while `.open-sheet` is on. |
+| 16 | Any screen while an upload runs | The floating upload progress chip is correct (shows "Uploading 0 of 40 · 2%", 44 px, tap goes back to Upload, hides when done). But at 360 wide it is 170 px wide (16 to 186) and the raised Upload circle starts at x 145, so the corners overlap by a few pixels. | `.upchip` | `.upchip{max-width:calc(50vw - 40px)}` (at 360 that is 140 px, at 390 it is 155) and let the text truncate. Or `.nav-center .upchip{left:var(--sp-4);bottom:calc(var(--nav-h) + 40px + env(safe-area-inset-bottom))}` to lift it above the circle. |
+| 17 | Insights, Posting, Sounds, Raw (360) | Card titles are cut to one line ("What makes our shampoo foam...", "Comment reply: My scalp is d..."). Editors match raw clips to card titles in Raw, so a longer title that looks the same at the start can cause a wrong match. | `b.sm.clip`, `.grow.clip` | On Raw and Review only: `.raw b.clip,.rv b.clip{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}`. One line is fine on lists that are only for scanning. |
+| 18 | Review (360) | The "Raw vs edit" tab label is cut ("Raw vs e..."), because three tabs share 358 px. | `.seg button` | `.seg button{padding:0 4px;white-space:normal;line-height:1.1;font-size:var(--fs-xs)}` for the 3 up segment on screens under 380 wide, or rename to "Raw vs cut". |
+| 19 | Install and load | The manifest `theme_color` is `#4A3FB5` but the page meta is `#F6F2E9`, so the status bar color jumps between the splash and the app. Google Fonts (Manrope, Poppins) load through a blocking `<link>` which slows first paint on a weak mobile connection. | `layout.tsx`, `manifest.webmanifest` | Use one theme color for both (and a dark value with `media="(prefers-color-scheme: dark)"`). Load fonts with `next/font` (self hosted, `display:swap`) instead of the Google link. |
+| 20 | Upload, after leaving the app | The prototype shows progress while the app is open. A real phone suspends the tab when the screen locks or the user switches apps, and an upload will stall. | the upload service, not CSS | Use resumable multipart uploads to storage (resume from the last finished part when the app returns), keep the screen awake while uploading (`navigator.wakeLock`), and show one line on the Upload screen: "Keep Noun ART open until the bar finishes. If it stops, open it again and it continues." |
+
+## Checked and fine
+
+- Tap targets at 390 in light, all 25 screens: no button, chip, tab, toggle, link or icon button under 44 x 44 except finding 5. The review timeline pins measure 34 to 41 px but carry a 10 px invisible extension (`.pin::after{inset:-10px}`), so the hit area is 44 or more. The scrub bar is 44 px tall (`.scrub`) with `touch-action:none`. Thumbnails are 114 x 152.
+- Sideways scroll at 390: none on any screen, light or dark, and none inside the schedule sheet. Only intentional inner scrollers exist (`.tabsbar`, `.covers`).
+- Content under the bottom bar: `#view` ends with `var(--nav-clear)` (136 px) plus the safe area, which is more than the 70 px bar and the 36 px the Upload circle sticks out. Last items were reachable on every long screen.
+- Schedule sheet: 726 px tall (86dvh), scrolls inside, and its Schedule button is sticky at the bottom (top 770, bottom 828 of 844) with the safe area added in `.schfoot`.
+- Thumb reach elsewhere: Upload steps ("Add 3 videos", "Upload files"), Studio Generate and the schedule sheet button are all sticky above the bar.
+- Upload from camera roll: two taps once finding 6 is built (Upload in the bar, then Camera roll). The progress chip survives navigation to other screens.
+- Dark mode: no sideways scroll, no new contrast failures found in text on flat backgrounds on home, review, upload, bank or the editor task.
+
+## Rules the real build must follow on every new screen
+
+1. Every tap target is at least 44 x 44 px. A smaller visual is fine if a pseudo element (`::after{inset:-10px}`) makes the hit area 44. Use `.btn`, `.btn.sm`, `.chip`, `.seg button`, `.iconbtn` as they are, never a custom small button.
+2. The main action of a long screen (Approve, Send to editor, Schedule, Upload, Save) is sticky in the lower half: `.sticky-cta` or `.schfoot`, `bottom` always includes `env(safe-area-inset-bottom)` and clears the bottom bar and the Upload circle.
+3. Every input, textarea and select is at least 16px. Set the right `type`, `inputmode`, `autocapitalize` and `enterkeyhint` for it.
+4. No text under 12px, except the tiny numbers inside a decorative dot. Grey text must be at least 4.5:1 on its real background, in both themes. Text over photos or video gets a scrim.
+5. No page sideways scroll, ever. Check at 360 wide. Any `display:grid` that holds long chips or titles needs `grid-template-columns:minmax(0,1fr)`, and flex children that hold text need `min-width:0`.
+6. Only deliberate rows may scroll sideways (tabs, covers), and they need an edge fade and the active item scrolled into view.
+7. Anything that shows who or when (approved by, edited by) must wrap, never cut with an ellipsis.
+8. Fixed and sticky elements use the safe area on all four sides (`top`, `left`, `right`, `bottom`).
+9. Sheets: max height 86dvh, scroll inside, `overscroll-behavior:contain`, primary button sticky inside the sheet, page behind locked.
+10. File pickers are real `<label>` plus `<input type="file">`, started by a direct tap, never by script after a delay. Uploads are resumable and show progress in the floating chip on every screen.
+11. Never hide a daily action behind hover, long press or a menu. Swipe gestures always have a visible button as well.
+12. Test each new screen at 390 and 360 wide, light and dark, with the keyboard open, before it is shown to the owner.
+
+## Nov 15 2026: Settings (Team and access, Roles, Integrations), Invite sheet, Home setup card
+
+Checked at 390 and 360 wide, light and dark, in two real width iframes (the browser pane's size emulation does not change the layout width reliably, so the app was loaded in 390 and 360 wide frames and measured: tap targets, text size, sideways overflow). Localhost showed the real team, so Roles was read only. The Roles view, People, Integrations, the Invite sheet and the Home "Finish your setup" card were all measured.
+
+Fine: no sideways page scroll anywhere (only the Compare all roles box scrolls, 720 inside 311, with its sticky first column and edge fade). No tap target under 44px and no text under 12px on any of these views. The page row pills (View, Edit, Approve) are 44px tall and wrap onto their own line under 560px. "Used by" wraps in both widths (tested with a long list of names). The Invite sheet is 86dvh (671 of 780), its Show the email button is sticky with its bottom edge at 772 of 780, and the Who field is 16px. The suggestions render inside the sheet, never as a floating layer. Dark mode is readable on all of them.
+
+Fixed (integrations.css): a long key name on an Integrations card (`NEXT_PUBLIC_SUPABASE_ANON_KEY`) broke in the middle of the word because "entered" sat on the same line. The key chip now wraps, so "entered" drops to the next line and the name stays whole.
+
+Needs a component or test with a real keyboard (not CSS):
+- Suggestions above the phone keyboard could not be seen live (Google is not connected on localhost). The CSS is right (inline list, 56px rows, inside the scrolling sheet), but the Who input should call `scrollIntoView({block:"start"})` on focus so the list is not under the keyboard, and the sticky Send button must not cover the last suggestion. Test on a real phone once Google is connected.
+- The dropdown search inputs elsewhere (`.search.sm input` in the role dropdown) are 13.5px, which zooms iPhone Safari on focus. This is the global finding 3 in core.css, not a change in these four files.
+- The Compare all roles box has no visible "scroll" hint besides the edge fade; fine, as the fade appears only while more is to the right.
+
+## Nov 16 2026: Upload/Files (Upload, Files, the content team inbox, their sheets, the Home inbox block)
+
+Checked at 390 and 360 wide on the demo, light, plus dark on the inbox: sideways overflow, tap targets, input text size and text under 12px were measured in the browser on each view, and each sheet was measured open (height, sticky button, inputs).
+
+Fine: no sideways page scroll on Upload, Files (top folder and New uploads) or the inbox at either width; the path row in Files is the one deliberate sideways row and has its edge fade. Every sheet (folder menu, Create a folder, Move, Which card is this for, Make a card) is at most 86dvh, scrolls inside, keeps its main button sticky at the bottom and has 16px inputs with the right keyboard hints. Files has its two actions sticky above the bottom bar. Dark mode reads well.
+
+Fixed:
+- The phone bar's middle label was "Upload/Files" and ran past its button. The bar now says "Upload" (a `phone` label in `src/lib/nav.ts`, read by `MobileNav.tsx`); the sidebar and the page title keep "Upload/Files".
+- Three controls were 36px tall on a phone: the Upload and Files switch, the Confirm, Pick another, Pick a card and Make a card buttons, and the quick name chips. They are 44px for a finger now (phone and iPad); the tighter 36px stays for a mouse on a computer only (`files.css`).
+- Upload had no sticky action: Select files sat about one screen down. A sticky "Select videos or photos" button (a real label and file input) now sits above the bottom bar on a phone (`NewUpload.tsx`).
+- The Change folder list cut the first row when its text ran to three lines (rows shrank inside the scrolling list). Rows keep their height now, and the "Team folders" heading wraps cleanly.
+- In the inbox, Open folder squeezed the drop's name and path into a narrow column. On a phone it takes its own line.
+- At 360 wide Download dropped to a line by itself under Play. The two stay together.
+- The match buttons no longer show before the page's data source is ready (a sheet opened in that first moment waited for cards forever, seen on the demo).
+
+Not seen live: the inbox block on the Strategist/Editor Home (it needs View as, which is a cookie shared with the owner's open tab, so it was left alone). It uses the same pieces as the inbox head, wraps by rule, and its Open the inbox button is full width on a phone. Check it on a phone as a Strategist/Editor before the push.
+
+Left as is (global, not these screens): the bottom bar badge is 10px (finding 10 above).
